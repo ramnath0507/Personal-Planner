@@ -1,112 +1,132 @@
 // Load saved tasks when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    loadTasks();
+    if (window.location.pathname.includes('kanban.html')) {
+        loadKanbanTasks();
+    } else if (window.location.pathname.includes('grid.html')) {
+        loadGridTasks();
+    }
 });
 
-// Add Task
+// Add Task (Kanban or Grid)
 function addTask() {
     const taskInput = document.getElementById('task-input');
-    const prioritySelect = document.getElementById('priority-select');
-    const dueDateInput = document.getElementById('due-date');
-
     const taskText = taskInput.value.trim();
-    const priority = prioritySelect.value;
-    const dueDate = dueDateInput.value;
 
     if (taskText !== "") {
-        const taskList = document.getElementById('task-list');
+        if (window.location.pathname.includes('kanban.html')) {
+            const statusSelect = document.getElementById('status-select');
+            const status = statusSelect.value;
 
-        // Create a new list item
-        const li = document.createElement('li');
+            const columnId = `${status}-column`;
+            const column = document.getElementById(columnId);
 
-        // Add task details
-        const taskSpan = document.createElement('span');
-        taskSpan.textContent = taskText;
+            const li = document.createElement('li');
+            li.textContent = taskText;
 
-        const prioritySpan = document.createElement('span');
-        prioritySpan.className = 'priority';
-        prioritySpan.textContent = `[${priority.toUpperCase()}]`;
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete';
+            deleteButton.onclick = function () {
+                column.removeChild(li);
+                saveKanbanTasks();
+            };
 
-        const dueDateSpan = document.createElement('span');
-        dueDateSpan.className = 'due-date';
-        dueDateSpan.textContent = dueDate ? `Due: ${dueDate}` : '';
+            li.appendChild(deleteButton);
+            column.appendChild(li);
 
-        // Add a delete button
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Delete';
-        deleteButton.onclick = function () {
-            taskList.removeChild(li);
-            saveTasks(); // Save updated list after deletion
-        };
+            saveKanbanTasks();
+        } else if (window.location.pathname.includes('grid.html')) {
+            const taskGrid = document.getElementById('task-grid');
 
-        // Append elements to the list item
-        li.appendChild(prioritySpan);
-        li.appendChild(taskSpan);
-        li.appendChild(dueDateSpan);
-        li.appendChild(deleteButton);
+            const taskDiv = document.createElement('div');
+            taskDiv.textContent = taskText;
 
-        taskList.appendChild(li);
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete';
+            deleteButton.onclick = function () {
+                taskGrid.removeChild(taskDiv);
+                saveGridTasks();
+            };
 
-        // Clear input fields
+            taskDiv.appendChild(deleteButton);
+            taskGrid.appendChild(taskDiv);
+
+            saveGridTasks();
+        }
+
         taskInput.value = '';
-        dueDateInput.value = '';
-
-        // Save tasks to localStorage
-        saveTasks();
     }
 }
 
-// Save Tasks to localStorage
-function saveTasks() {
-    const taskList = document.getElementById('task-list');
-    const tasks = [];
+// Save Kanban Tasks to localStorage
+function saveKanbanTasks() {
+    const columns = ['todo', 'in-progress', 'done'];
+    const tasks = {};
 
-    taskList.querySelectorAll('li').forEach(item => {
-        const taskText = item.querySelector('span:not(.priority):not(.due-date)').textContent;
-        const priority = item.querySelector('.priority').textContent.replace('[', '').replace(']', '');
-        const dueDate = item.querySelector('.due-date').textContent.replace('Due: ', '');
+    columns.forEach(column => {
+        const columnElement = document.getElementById(`${column}-column`);
+        tasks[column] = [];
 
-        tasks.push({
-            text: taskText,
-            priority: priority.toLowerCase(),
-            dueDate: dueDate || null
+        columnElement.querySelectorAll('li').forEach(item => {
+            tasks[column].push(item.textContent.replace('Delete', '').trim());
         });
     });
 
-    localStorage.setItem('tasks', JSON.stringify(tasks));
+    localStorage.setItem('kanbanTasks', JSON.stringify(tasks));
 }
 
-// Load Tasks from localStorage
-function loadTasks() {
-    const taskList = document.getElementById('task-list');
-    const savedTasks = JSON.parse(localStorage.getItem('tasks')) || [];
+// Load Kanban Tasks from localStorage
+function loadKanbanTasks() {
+    const savedTasks = JSON.parse(localStorage.getItem('kanbanTasks')) || { todo: [], 'in-progress': [], done: [] };
 
-    savedTasks.forEach(task => {
-        const li = document.createElement('li');
+    Object.keys(savedTasks).forEach(column => {
+        const columnElement = document.getElementById(`${column}-column`);
 
-        const prioritySpan = document.createElement('span');
-        prioritySpan.className = 'priority';
-        prioritySpan.textContent = `[${task.priority.toUpperCase()}]`;
+        savedTasks[column].forEach(taskText => {
+            const li = document.createElement('li');
+            li.textContent = taskText;
 
-        const taskSpan = document.createElement('span');
-        taskSpan.textContent = task.text;
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = 'Delete';
+            deleteButton.onclick = function () {
+                columnElement.removeChild(li);
+                saveKanbanTasks();
+            };
 
-        const dueDateSpan = document.createElement('span');
-        dueDateSpan.className = 'due-date';
-        dueDateSpan.textContent = task.dueDate ? `Due: ${task.dueDate}` : '';
+            li.appendChild(deleteButton);
+            columnElement.appendChild(li);
+        });
+    });
+}
+
+// Save Grid Tasks to localStorage
+function saveGridTasks() {
+    const taskGrid = document.getElementById('task-grid');
+    const tasks = [];
+
+    taskGrid.querySelectorAll('div').forEach(taskDiv => {
+        tasks.push(taskDiv.textContent.replace('Delete', '').trim());
+    });
+
+    localStorage.setItem('gridTasks', JSON.stringify(tasks));
+}
+
+// Load Grid Tasks from localStorage
+function loadGridTasks() {
+    const taskGrid = document.getElementById('task-grid');
+    const savedTasks = JSON.parse(localStorage.getItem('gridTasks')) || [];
+
+    savedTasks.forEach(taskText => {
+        const taskDiv = document.createElement('div');
+        taskDiv.textContent = taskText;
 
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Delete';
         deleteButton.onclick = function () {
-            taskList.removeChild(li);
-            saveTasks();
+            taskGrid.removeChild(taskDiv);
+            saveGridTasks();
         };
 
-        li.appendChild(prioritySpan);
-        li.appendChild(taskSpan);
-        li.appendChild(dueDateSpan);
-        li.appendChild(deleteButton);
-
-        taskList.appendChild(li);
+        taskDiv.appendChild(deleteButton);
+        taskGrid.appendChild(taskDiv);
     });
 }
