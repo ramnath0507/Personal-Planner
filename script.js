@@ -1,148 +1,112 @@
-// Load saved data when the page loads
+// Load saved tasks when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    loadTodos();
-    loadReminders();
-    loadNotes();
+    loadTasks();
 });
 
-// Save To-Do Task
-function addTodo() {
-    const todoInput = document.getElementById('todo-input');
-    const todoText = todoInput.value.trim();
+// Add Task
+function addTask() {
+    const taskInput = document.getElementById('task-input');
+    const prioritySelect = document.getElementById('priority-select');
+    const dueDateInput = document.getElementById('due-date');
 
-    if (todoText !== "") {
-        const todoList = document.getElementById('todo-list');
+    const taskText = taskInput.value.trim();
+    const priority = prioritySelect.value;
+    const dueDate = dueDateInput.value;
+
+    if (taskText !== "") {
+        const taskList = document.getElementById('task-list');
 
         // Create a new list item
         const li = document.createElement('li');
-        li.textContent = todoText;
+
+        // Add task details
+        const taskSpan = document.createElement('span');
+        taskSpan.textContent = taskText;
+
+        const prioritySpan = document.createElement('span');
+        prioritySpan.className = 'priority';
+        prioritySpan.textContent = `[${priority.toUpperCase()}]`;
+
+        const dueDateSpan = document.createElement('span');
+        dueDateSpan.className = 'due-date';
+        dueDateSpan.textContent = dueDate ? `Due: ${dueDate}` : '';
 
         // Add a delete button
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Delete';
         deleteButton.onclick = function () {
-            todoList.removeChild(li);
-            saveTodos(); // Save updated list after deletion
+            taskList.removeChild(li);
+            saveTasks(); // Save updated list after deletion
         };
 
+        // Append elements to the list item
+        li.appendChild(prioritySpan);
+        li.appendChild(taskSpan);
+        li.appendChild(dueDateSpan);
         li.appendChild(deleteButton);
-        todoList.appendChild(li);
 
-        // Clear input field
-        todoInput.value = '';
+        taskList.appendChild(li);
 
-        // Save to localStorage
-        saveTodos();
+        // Clear input fields
+        taskInput.value = '';
+        dueDateInput.value = '';
+
+        // Save tasks to localStorage
+        saveTasks();
     }
 }
 
-// Save Reminders
-function addReminder() {
-    const reminderInput = document.getElementById('reminder-input');
-    const reminderText = reminderInput.value.trim();
+// Save Tasks to localStorage
+function saveTasks() {
+    const taskList = document.getElementById('task-list');
+    const tasks = [];
 
-    if (reminderText !== "") {
-        const reminderList = document.getElementById('reminder-list');
+    taskList.querySelectorAll('li').forEach(item => {
+        const taskText = item.querySelector('span:not(.priority):not(.due-date)').textContent;
+        const priority = item.querySelector('.priority').textContent.replace('[', '').replace(']', '');
+        const dueDate = item.querySelector('.due-date').textContent.replace('Due: ', '');
 
-        // Create a new list item
-        const li = document.createElement('li');
-        li.textContent = reminderText;
-
-        // Add a delete button
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Delete';
-        deleteButton.onclick = function () {
-            reminderList.removeChild(li);
-            saveReminders(); // Save updated list after deletion
-        };
-
-        li.appendChild(deleteButton);
-        reminderList.appendChild(li);
-
-        // Clear input field
-        reminderInput.value = '';
-
-        // Save to localStorage
-        saveReminders();
-    }
-}
-
-// Save Notes
-function saveNotes() {
-    const notesInput = document.getElementById('notes-input');
-    const savedNotes = document.getElementById('saved-notes');
-    savedNotes.textContent = notesInput.value;
-
-    // Save notes to localStorage
-    localStorage.setItem('notes', notesInput.value);
-}
-
-// Save To-Do List to localStorage
-function saveTodos() {
-    const todoList = document.getElementById('todo-list');
-    const todos = [];
-    todoList.querySelectorAll('li').forEach(item => {
-        todos.push(item.textContent.replace('Delete', '').trim());
+        tasks.push({
+            text: taskText,
+            priority: priority.toLowerCase(),
+            dueDate: dueDate || null
+        });
     });
-    localStorage.setItem('todos', JSON.stringify(todos));
+
+    localStorage.setItem('tasks', JSON.stringify(tasks));
 }
 
-// Save Reminders to localStorage
-function saveReminders() {
-    const reminderList = document.getElementById('reminder-list');
-    const reminders = [];
-    reminderList.querySelectorAll('li').forEach(item => {
-        reminders.push(item.textContent.replace('Delete', '').trim());
-    });
-    localStorage.setItem('reminders', JSON.stringify(reminders));
-}
+// Load Tasks from localStorage
+function loadTasks() {
+    const taskList = document.getElementById('task-list');
+    const savedTasks = JSON.parse(localStorage.getItem('tasks')) || [];
 
-// Load To-Do List from localStorage
-function loadTodos() {
-    const todoList = document.getElementById('todo-list');
-    const savedTodos = JSON.parse(localStorage.getItem('todos')) || [];
-
-    savedTodos.forEach(todoText => {
+    savedTasks.forEach(task => {
         const li = document.createElement('li');
-        li.textContent = todoText;
+
+        const prioritySpan = document.createElement('span');
+        prioritySpan.className = 'priority';
+        prioritySpan.textContent = `[${task.priority.toUpperCase()}]`;
+
+        const taskSpan = document.createElement('span');
+        taskSpan.textContent = task.text;
+
+        const dueDateSpan = document.createElement('span');
+        dueDateSpan.className = 'due-date';
+        dueDateSpan.textContent = task.dueDate ? `Due: ${task.dueDate}` : '';
 
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Delete';
         deleteButton.onclick = function () {
-            todoList.removeChild(li);
-            saveTodos();
+            taskList.removeChild(li);
+            saveTasks();
         };
 
+        li.appendChild(prioritySpan);
+        li.appendChild(taskSpan);
+        li.appendChild(dueDateSpan);
         li.appendChild(deleteButton);
-        todoList.appendChild(li);
+
+        taskList.appendChild(li);
     });
-}
-
-// Load Reminders from localStorage
-function loadReminders() {
-    const reminderList = document.getElementById('reminder-list');
-    const savedReminders = JSON.parse(localStorage.getItem('reminders')) || [];
-
-    savedReminders.forEach(reminderText => {
-        const li = document.createElement('li');
-        li.textContent = reminderText;
-
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Delete';
-        deleteButton.onclick = function () {
-            reminderList.removeChild(li);
-            saveReminders();
-        };
-
-        li.appendChild(deleteButton);
-        reminderList.appendChild(li);
-    });
-}
-
-// Load Notes from localStorage
-function loadNotes() {
-    const notesInput = document.getElementById('notes-input');
-    const savedNotes = localStorage.getItem('notes') || '';
-    notesInput.value = savedNotes;
-    document.getElementById('saved-notes').textContent = savedNotes;
 }

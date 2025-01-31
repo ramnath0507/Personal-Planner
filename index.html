@@ -3,35 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personal Planner</title>
+    <title>Todoist-like Planner</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h1>Personal Planner</h1>
+        <h1>Todoist-like Planner</h1>
 
-        <!-- To-Do Section -->
-        <div class="section">
-            <h2>To-Do List</h2>
-            <input type="text" id="todo-input" placeholder="Add a new task">
-            <button onclick="addTodo()">Add Task</button>
-            <ul id="todo-list"></ul>
+        <!-- Add Task Section -->
+        <div class="add-task-section">
+            <input type="text" id="task-input" placeholder="Add a new task">
+            <select id="priority-select">
+                <option value="high">High Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="low">Low Priority</option>
+            </select>
+            <input type="date" id="due-date">
+            <button onclick="addTask()">Add Task</button>
         </div>
 
-        <!-- Reminder Section -->
-        <div class="section">
-            <h2>Reminders</h2>
-            <input type="text" id="reminder-input" placeholder="Add a reminder">
-            <button onclick="addReminder()">Add Reminder</button>
-            <ul id="reminder-list"></ul>
-        </div>
-
-        <!-- Notes Section -->
-        <div class="section">
-            <h2>Notes</h2>
-            <textarea id="notes-input" placeholder="Write your notes here..."></textarea>
-            <button onclick="saveNotes()">Save Notes</button>
-            <p id="saved-notes"></p>
+        <!-- Task List -->
+        <div class="task-list">
+            <h2>Tasks</h2>
+            <ul id="task-list"></ul>
         </div>
     </div>
 
